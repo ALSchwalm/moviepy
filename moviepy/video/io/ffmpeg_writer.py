@@ -92,7 +92,7 @@ class FFMPEG_VideoWriter:
         ]
         if audiofile is not None:
             cmd.extend([
-                '-itsoffset', str(6),
+                '-itsoffset', str(5),
                 '-i', audiofile,
                 '-acodec', 'copy'
             ])
