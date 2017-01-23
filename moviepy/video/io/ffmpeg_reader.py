@@ -297,18 +297,23 @@ def ffmpeg_parse_infos(filename, print_infos=False, check_duration=True):
 
         try:
             match = re.search("( [0-9]*.| )[0-9]* tbr", line)
-            tbr = float(line[match.start():match.end()].split(' ')[1])
+            tbr = line[match.start():match.end()].split(' ')[1]
             result['video_fps'] = tbr
 
         except:
             match = re.search("( [0-9]*.| )[0-9]* fps", line)
-            result['video_fps'] = float(line[match.start():match.end()].split(' ')[1])
+            result['video_fps'] = line[match.start():match.end()].split(' ')[1]
 
+        if result['video_fps'].endswith("k"):
+            result['video_fps'] = float(result['video_fps'].strip("k"))*1000
+        else:
+            result['video_fps'] = float(result['video_fps'])
 
         # It is known that a fps of 24 is often written as 24000/1001
         # but then ffmpeg nicely rounds it to 23.98, which we hate.
         coef = 1000.0/1001.0
         fps = result['video_fps']
+
         for x in [23,24,25,30,50]:
             if (fps!=x) and abs(fps - x*coef) < .01:
                 result['video_fps'] = x*coef
