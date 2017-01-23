@@ -297,35 +297,30 @@ def ffmpeg_parse_infos(filename, print_infos=False, check_duration=True):
 
         try:
             match = re.search("( [0-9]*.| )[0-9]* tbr", line)
-            tbr = float(line[match.start():match.end()].split(' ')[1])
+            tbr = line[match.start():match.end()].split(' ')[1]
             result['video_fps'] = tbr
 
         except:
-            try:
-                match = re.search("( [0-9]*.| )[0-9]* fps", line)
-                result['video_fps'] = float(line[match.start():match.end()].split(' ')[1])
-            except:
-                result['video_fps'] = float(24)
+            match = re.search("( [0-9]*.| )[0-9]* fps", line)
+            result['video_fps'] = line[match.start():match.end()].split(' ')[1]
 
+        if result['video_fps'].endswith("k"):
+            result['video_fps'] = float(result['video_fps'].strip("k"))*1000
+        else:
+            result['video_fps'] = float(result['video_fps'])
 
-        if result['video_fps'] != "unknown":
-            # It is known that a fps of 24 is often written as 24000/1001
-            # but then ffmpeg nicely rounds it to 23.98, which we hate.
-            coef = 1000.0/1001.0
-            fps = result['video_fps']
-            for x in [23,24,25,30,50]:
-                if (fps!=x) and abs(fps - x*coef) < .01:
-                    result['video_fps'] = x*coef
+        # It is known that a fps of 24 is often written as 24000/1001
+        # but then ffmpeg nicely rounds it to 23.98, which we hate.
+        coef = 1000.0/1001.0
+        fps = result['video_fps']
 
-            if check_duration:
-                result['video_nframes'] = int(result['duration']*result['video_fps'])+1
-                result['video_duration'] = result['duration']
-            else:
-                result['video_nframes'] = 1
-                result['video_duration'] = None
-                # We could have also recomputed the duration from the number
-                # of frames, as follows:
-                # >>> result['video_duration'] = result['video_nframes'] / result['video_fps']
+        for x in [23,24,25,30,50]:
+            if (fps!=x) and abs(fps - x*coef) < .01:
+                result['video_fps'] = x*coef
+
+        if check_duration:
+            result['video_nframes'] = int(result['duration']*result['video_fps'])+1
+            result['video_duration'] = result['duration']
         else:
             result['video_nframes'] = 1
             result['video_duration'] = None
